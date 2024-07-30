@@ -1,5 +1,7 @@
 from django.db import models
 
+from user.models import User
+
 
 class Airport(models.Model):
     name = models.CharField(max_length=255)
