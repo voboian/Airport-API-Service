@@ -4,7 +4,7 @@ from user.models import User
 
 
 class Airport(models.Model):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, unique=True)
     closest_big_city = models.CharField(max_length=255)
 
     def __str__(self):
@@ -12,7 +12,7 @@ class Airport(models.Model):
 
 
 class AirplaneType(models.Model):
-    name = models.CharField(max_length=255)
+    name = models.CharField(max_length=255, unique=True)
 
     def __str__(self):
         return self.name
@@ -37,9 +37,12 @@ class Airplane(models.Model):
 
 
 class Route(models.Model):
-    source = models.ForeignKey(Airport, on_delete=models.CASCADE, related_name="departure_routes")
-    destination = models.ForeignKey(Airport, on_delete=models.CASCADE, related_name="arrival_routes")
+    source = models.ForeignKey(Airport, on_delete=models.CASCADE, related_name="routes_from")
+    destination = models.ForeignKey(Airport, on_delete=models.CASCADE, related_name="routes_to")
     distance = models.IntegerField()
+
+    class Meta:
+        unique_together = ("source", "destination")
 
     def __str__(self):
         return f"{self.source.name} to {self.destination.name}"
@@ -51,6 +54,9 @@ class Flight(models.Model):
     departure_time = models.DateTimeField()
     arrival_time = models.DateTimeField()
     crew = models.ManyToManyField(Crew, related_name="flights")
+
+    class Meta:
+        unique_together = ("route", "airplane", "departure_time", "arrival_time")
 
     def __str__(self):
         return f"Flight {self.id} on {self.departure_time}"
@@ -69,6 +75,9 @@ class Ticket(models.Model):
     seat = models.IntegerField()
     flight = models.ForeignKey(Flight, on_delete=models.CASCADE, related_name="tickets")
     order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name="tickets")
+
+    class Meta:
+        unique_together = ("flight", "row", "seat")
 
     def __str__(self):
         return f"Ticket {self.id} for Flight {self.flight.id}"
