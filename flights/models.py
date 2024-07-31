@@ -72,6 +72,10 @@ class Flight(models.Model):
     def __str__(self):
         return f"Flight {self.route} on {self.departure_time}"
 
+    @property
+    def tickets_available(self):
+        return self.airplane.rows * self.airplane.seats_in_row - self.tickets.count()
+
 
 class Order(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
