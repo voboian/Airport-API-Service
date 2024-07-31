@@ -1,3 +1,4 @@
+from django.core.exceptions import ValidationError
 from django.db import models
 
 from django.conf import settings
@@ -35,6 +36,10 @@ class Airplane(models.Model):
     def __str__(self):
         return self.name
 
+    @property
+    def capacity(self) -> int:
+        return self.rows * self.seats_in_row
+
 
 class Route(models.Model):
     source = models.ForeignKey(Airport, on_delete=models.CASCADE, related_name="routes_from")
@@ -46,6 +51,12 @@ class Route(models.Model):
 
     def __str__(self):
         return f"{self.source.name} to {self.destination.name}"
+
+    def clean(self):
+        if self.source == self.destination:
+            raise ValidationError(
+                "The city of departure and arrival cannot be the same"
+            )
 
 
 class Flight(models.Model):
