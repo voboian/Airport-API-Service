@@ -9,7 +9,8 @@ from .serializers import (
     FlightSerializer,
     OrderSerializer,
     TicketSerializer,
-    FlightListSerializer
+    FlightListSerializer,
+    RouteListSerializer,
 )
 
 
@@ -30,7 +31,12 @@ class AirplaneViewSet(viewsets.ModelViewSet):
 
 class RouteViewSet(viewsets.ModelViewSet):
     queryset = Route.objects.all()
-    serializer_class = RouteSerializer
+
+    def get_serializer_class(self):
+        if self.action == "list" or self.action == "retrieve":
+            return RouteListSerializer
+
+        return RouteSerializer
 
 
 class CrewViewSet(viewsets.ModelViewSet):
@@ -42,7 +48,7 @@ class FlightViewSet(viewsets.ModelViewSet):
     queryset = Flight.objects.select_related("route", "airplane").prefetch_related("crew").all()
 
     def get_serializer_class(self):
-        if self.action == "list":
+        if self.action == "list" or self.action == "retrieve":
             return FlightListSerializer
 
         return FlightSerializer
