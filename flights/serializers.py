@@ -45,7 +45,7 @@ class RouteSerializer(serializers.ModelSerializer):
 class TicketSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ticket
-        fields = ("flight", "row", "seat")
+        fields = ("flight", "row", "seat", "order")
 
 
 class FlightSerializer(serializers.ModelSerializer):

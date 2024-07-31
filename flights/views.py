@@ -38,7 +38,7 @@ class CrewViewSet(viewsets.ModelViewSet):
 
 
 class FlightViewSet(viewsets.ModelViewSet):
-    queryset = Flight.objects.select_related("route", "airplane").prefetch_related("crew_set").all()
+    queryset = Flight.objects.select_related("route", "airplane").prefetch_related("crew").all()
     serializer_class = FlightSerializer
 
 

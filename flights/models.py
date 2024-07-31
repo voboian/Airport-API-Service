@@ -1,6 +1,6 @@
 from django.db import models
 
-from user.models import User
+from django.conf import settings
 
 
 class Airport(models.Model):
@@ -59,15 +59,15 @@ class Flight(models.Model):
         unique_together = ("route", "airplane", "departure_time", "arrival_time")
 
     def __str__(self):
-        return f"Flight {self.id} on {self.departure_time}"
+        return f"Flight {self.route} on {self.departure_time}"
 
 
 class Order(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
-    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="orders")
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="orders")
 
     def __str__(self):
-        return f"Order {self.id}"
+        return f"{self.user}"
 
 
 class Ticket(models.Model):
@@ -80,4 +80,4 @@ class Ticket(models.Model):
         unique_together = ("flight", "row", "seat")
 
     def __str__(self):
-        return f"Ticket {self.id} for Flight {self.flight.id}"
+        return f"Ticket {self.id} for Flight {self.flight}"
