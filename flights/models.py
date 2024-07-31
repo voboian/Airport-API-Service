@@ -33,7 +33,7 @@ class Airplane(models.Model):
     airplane_type = models.ForeignKey(AirplaneType, on_delete=models.CASCADE, related_name="airplanes")
 
     def __str__(self):
-        return f"{self.airplane_type.name} {self.name}"
+        return self.name
 
 
 class Route(models.Model):
