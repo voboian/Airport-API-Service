@@ -1,5 +1,9 @@
 from datetime import datetime
+
+from django.db.models import F, Count
 from rest_framework import viewsets
+from rest_framework.pagination import PageNumberPagination
+
 from .models import Airport, AirplaneType, Airplane, Route, Crew, Flight, Order, Ticket
 from .serializers import (
     AirportSerializer,
@@ -13,7 +17,7 @@ from .serializers import (
     FlightListSerializer,
     RouteListSerializer,
     AirplaneListSerializer,
-    FlightDetailSerializer,
+    FlightDetailSerializer, OrderListSerializer,
 )
 
 
@@ -57,7 +61,10 @@ class FlightViewSet(viewsets.ModelViewSet):
         "route__source",
         "route__destination",
         "airplane"
-    ).prefetch_related("crew", "tickets").all()
+    ).prefetch_related("crew").annotate(tickets_available=(
+                F("airplane__rows") * F("airplane__seats_in_row")
+                - Count("tickets")
+            )).all()
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -91,15 +98,29 @@ class FlightViewSet(viewsets.ModelViewSet):
         return queryset.distinct()
 
 
+class OrderPagination(PageNumberPagination):
+    page_size = 1
+    max_page_size = 100
+
+
 class OrderViewSet(viewsets.ModelViewSet):
     queryset = Order.objects.all().prefetch_related(
-        "tickets__flight__route",
-        "tickets__flight__airplane"
+        "tickets__flight__route__source",
+        "tickets__flight__route__destination",
+        "tickets__flight__airplane",
+
     )
-    serializer_class = OrderSerializer
+    pagination_class = OrderPagination
+
+    def get_serializer_class(self):
+        if self.action == "list":
+            return OrderListSerializer
+        return OrderSerializer
 
     def get_queryset(self):
-        return self.queryset.filter(user=self.request.user)
+        queryset = self.queryset.filter(user=self.request.user)
+
+        return queryset
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)

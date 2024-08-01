@@ -88,6 +88,7 @@ class TicketSeatsSerializer(TicketSerializer):
 class FlightSerializer(serializers.ModelSerializer):
     departure_time = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
     arrival_time = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
+    tickets_available = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Flight
@@ -99,7 +100,7 @@ class FlightSerializer(serializers.ModelSerializer):
         return data
 
 
-class FlightListSerializer(serializers.ModelSerializer):
+class FlightListSerializer(FlightSerializer):
     route = serializers.StringRelatedField(many=False)
     airplane = serializers.StringRelatedField(many=False)
     airplane_num_seats = serializers.IntegerField(
@@ -132,6 +133,7 @@ class FlightDetailSerializer(FlightListSerializer):
             "departure_time",
             "arrival_time",
             "taken_places",
+            "tickets_available",
             "crew",
         )
 
@@ -151,3 +153,11 @@ class OrderSerializer(serializers.ModelSerializer):
             for ticket_data in tickets_data:
                 Ticket.objects.create(order=order, **ticket_data)
             return order
+
+
+class TicketListSerializer(TicketSerializer):
+    flight = FlightListSerializer(read_only=True)
+
+
+class OrderListSerializer(OrderSerializer):
+    tickets = TicketListSerializer(many=True, read_only=True)
