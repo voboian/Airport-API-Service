@@ -53,6 +53,16 @@ class RouteListSerializer(RouteSerializer):
 
 
 class TicketSerializer(serializers.ModelSerializer):
+    def validate(self, attrs) -> dict:
+        data = super(TicketSerializer, self).validate(attrs)
+        Ticket.validate_seats(
+            attrs["row"],
+            attrs["seat"],
+            serializers.ValidationError,
+            attrs["flight"],
+        )
+        return data
+
     class Meta:
         model = Ticket
         fields = ("flight", "row", "seat",)
