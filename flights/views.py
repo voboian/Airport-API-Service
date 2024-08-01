@@ -1,3 +1,4 @@
+from datetime import datetime
 from rest_framework import viewsets
 from .models import Airport, AirplaneType, Airplane, Route, Crew, Flight, Order, Ticket
 from .serializers import (
@@ -56,13 +57,36 @@ class FlightViewSet(viewsets.ModelViewSet):
         "route__source",
         "route__destination",
         "airplane"
-    ).prefetch_related("crew").all()
+    ).prefetch_related("crew", "tickets").all()
 
     def get_serializer_class(self):
         if self.action == "list" or self.action == "retrieve":
             return FlightListSerializer
 
         return FlightSerializer
+
+    @staticmethod
+    def _params_to_ints(qs):
+        return [int(str_id) for str_id in qs.split(",")]
+
+    def get_queryset(self):
+        departure = self.request.query_params.get("departure")
+        arrival = self.request.query_params.get("arrival")
+        queryset = self.queryset
+        if departure:
+            departure = datetime.strptime(departure, "%Y-%m-%d").date()
+            queryset = queryset.filter(departure_time__date=departure)
+
+        if arrival:
+            arrival = datetime.strptime(arrival, "%Y-%m-%d").date()
+            queryset = queryset.filter(arrival_time__date=arrival)
+
+        if self.action == "list":
+            queryset = (
+                queryset.select_related("route", "airplane").prefetch_related(
+                    "route__source", "route__destination", "crew"
+                ).order_by("id"))
+        return queryset.distinct()
 
 
 class OrderViewSet(viewsets.ModelViewSet):
