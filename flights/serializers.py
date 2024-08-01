@@ -46,6 +46,17 @@ class RouteSerializer(serializers.ModelSerializer):
         model = Route
         fields = ("id", "source", "destination", "distance")
 
+    def validate(self, data):
+        if data["source"] == data["destination"]:
+            raise serializers.ValidationError(
+                "The city of departure and arrival cannot be the same"
+            )
+        if data["distance"] < 0:
+            raise serializers.ValidationError(
+                "The distance cannot be negative"
+            )
+        return data
+
 
 class RouteListSerializer(RouteSerializer):
     source = serializers.StringRelatedField(many=False)

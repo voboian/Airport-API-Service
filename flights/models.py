@@ -57,6 +57,14 @@ class Route(models.Model):
             raise ValidationError(
                 "The city of departure and arrival cannot be the same"
             )
+        if self.distance < 0:
+            raise ValidationError(
+                "The distance cannot be negative"
+            )
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
 
 
 class Flight(models.Model):
