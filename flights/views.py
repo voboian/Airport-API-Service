@@ -13,7 +13,7 @@ from .serializers import (
     FlightListSerializer,
     RouteListSerializer,
     AirplaneListSerializer,
-
+    FlightDetailSerializer,
 )
 
 
@@ -60,8 +60,10 @@ class FlightViewSet(viewsets.ModelViewSet):
     ).prefetch_related("crew", "tickets").all()
 
     def get_serializer_class(self):
-        if self.action == "list" or self.action == "retrieve":
+        if self.action == "list":
             return FlightListSerializer
+        if self.action == "retrieve":
+            return FlightDetailSerializer
 
         return FlightSerializer
 
