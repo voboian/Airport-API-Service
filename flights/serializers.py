@@ -87,6 +87,11 @@ class FlightSerializer(serializers.ModelSerializer):
         model = Flight
         fields = ("id", "route", "airplane", "departure_time", "arrival_time", "crew", "tickets_available")
 
+    def validate(self, data):
+        if data["departure_time"] > data["arrival_time"]:
+            raise serializers.ValidationError("Departure time must be before arrival time.")
+        return data
+
 
 class FlightListSerializer(FlightSerializer):
     route = serializers.StringRelatedField(many=False)

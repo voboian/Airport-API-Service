@@ -77,6 +77,14 @@ class Flight(models.Model):
     class Meta:
         unique_together = ("route", "airplane", "departure_time", "arrival_time")
 
+    def clean(self):
+        if self.departure_time > self.arrival_time:
+            raise ValidationError("Departure time must be before arrival time.")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return f"Flight {self.route} on {self.departure_time}"
 
