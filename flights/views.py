@@ -2,9 +2,11 @@ from datetime import datetime
 
 from django.db.models import F, Count
 from rest_framework import viewsets
+from rest_framework.authentication import TokenAuthentication
 from rest_framework.pagination import PageNumberPagination
 
 from .models import Airport, AirplaneType, Airplane, Route, Crew, Flight, Order, Ticket
+from .permissions import IsAdminOrIfAuthenticatedReadOnly
 from .serializers import (
     AirportSerializer,
     AirplaneTypeSerializer,
@@ -29,6 +31,8 @@ class AirportViewSet(viewsets.ModelViewSet):
 class AirplaneTypeViewSet(viewsets.ModelViewSet):
     queryset = AirplaneType.objects.all()
     serializer_class = AirplaneTypeSerializer
+    authentication_classes = (TokenAuthentication,)
+    permission_classes = (IsAdminOrIfAuthenticatedReadOnly,)
 
 
 class AirplaneViewSet(viewsets.ModelViewSet):
