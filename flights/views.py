@@ -1,6 +1,7 @@
 from datetime import datetime
 
 from django.db.models import F, Count
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import viewsets, status
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.decorators import action
@@ -51,6 +52,11 @@ class AirplaneViewSet(viewsets.ModelViewSet):
 
         return AirplaneSerializer
 
+    @extend_schema(
+        request=AirplaneImageSerializer,
+        responses={200: AirplaneImageSerializer},
+        description="Upload an image for a specific airplane."
+    )
     @action(
         methods=["POST"],
         detail=True,
@@ -75,6 +81,42 @@ class RouteViewSet(viewsets.ModelViewSet):
             return RouteListSerializer
 
         return RouteSerializer
+
+    def get_queryset(self):
+        queryset = self.queryset
+        source_name = self.request.query_params.get("source")
+        destination_name = self.request.query_params.get("destination")
+
+        if source_name:
+            queryset = queryset.filter(source__name__icontains=source_name)
+
+        if destination_name:
+            queryset = queryset.filter(destination__name__icontains=destination_name)
+
+        return queryset.distinct()
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="source",
+                type=str,
+                description="Filtering by source airport name",
+                style="form",
+                explode=True,
+            ),
+            OpenApiParameter(
+                name="destination",
+                type=str,
+                description="Filtering by destination airport name",
+                style="form",
+                explode=True,
+            ),
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        """Retrieve a list of routes with optional filtering
+        source airport name and destination airport name."""
+        return super().list(request, *args, **kwargs)
 
 
 class CrewViewSet(viewsets.ModelViewSet):
@@ -105,9 +147,12 @@ class FlightViewSet(viewsets.ModelViewSet):
         return [int(str_id) for str_id in qs.split(",")]
 
     def get_queryset(self):
+        queryset = self.queryset
         departure = self.request.query_params.get("departure")
         arrival = self.request.query_params.get("arrival")
-        queryset = self.queryset
+        source_name = self.request.query_params.get("source")
+        destination_name = self.request.query_params.get("destination")
+
         if departure:
             departure = datetime.strptime(departure, "%Y-%m-%d").date()
             queryset = queryset.filter(departure_time__date=departure)
@@ -116,12 +161,50 @@ class FlightViewSet(viewsets.ModelViewSet):
             arrival = datetime.strptime(arrival, "%Y-%m-%d").date()
             queryset = queryset.filter(arrival_time__date=arrival)
 
-        if self.action == "list":
-            queryset = (
-                queryset.select_related("route", "airplane").prefetch_related(
-                    "route__source", "route__destination", "crew"
-                ).order_by("id"))
+        if source_name:
+            queryset = queryset.filter(route__source__name__icontains=source_name)
+
+        if destination_name:
+            queryset = queryset.filter(route__destination__name__icontains=destination_name)
+
         return queryset.distinct()
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                name="departure",
+                type=str,
+                description="Filtering by departure date (YYYY-MM-DD)",
+                style="form",
+                explode=True,
+            ),
+            OpenApiParameter(
+                name="arrival",
+                type=str,
+                description="Filtering by arrival date (YYYY-MM-DD)",
+                style="form",
+                explode=True,
+            ),
+            OpenApiParameter(
+                name="source",
+                type=str,
+                description="Filtering by source airport name",
+                style="form",
+                explode=True,
+            ),
+            OpenApiParameter(
+                name="destination",
+                type=str,
+                description="Filtering by destination airport name",
+                style="form",
+                explode=True,
+            ),
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        """Retrieve a list of flights with optional filtering by departure date,
+        arrival date, source airport name, and destination airport name."""
+        return super().list(request, *args, **kwargs)
 
 
 class OrderPagination(PageNumberPagination):
