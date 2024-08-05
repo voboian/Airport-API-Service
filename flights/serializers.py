@@ -100,11 +100,10 @@ class TicketSeatsSerializer(TicketSerializer):
 class FlightSerializer(serializers.ModelSerializer):
     departure_time = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
     arrival_time = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S")
-    tickets_available = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Flight
-        fields = ("id", "route", "airplane", "departure_time", "arrival_time", "crew", "tickets_available")
+        fields = ("id", "route", "airplane", "departure_time", "arrival_time", "crew",)
 
     def validate(self, data):
         if data["departure_time"] > data["arrival_time"]:
@@ -118,6 +117,7 @@ class FlightListSerializer(FlightSerializer):
     airplane_num_seats = serializers.IntegerField(
         source="airplane.capacity", read_only=True
     )
+    tickets_available = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Flight
@@ -130,6 +130,13 @@ class FlightListSerializer(FlightSerializer):
             "tickets_available",
             "airplane_num_seats",
         )
+
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        representation["tickets_available"] = (
+                instance.airplane.rows * instance.airplane.seats_in_row - instance.tickets.count()
+        )
+        return representation
 
 
 class FlightDetailSerializer(FlightListSerializer):
