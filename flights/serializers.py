@@ -46,6 +46,12 @@ class AirplaneImageSerializer(serializers.ModelSerializer):
 class AirplaneListSerializer(AirplaneSerializer):
     airplane_type = serializers.StringRelatedField(many=False)
 
+    def to_representation(self, instance):
+        representation = super().to_representation(instance)
+        image_serializer = AirplaneImageSerializer(instance)
+        representation["image_url"] = image_serializer.data.get("image", "")
+        return representation
+
 
 class RouteSerializer(serializers.ModelSerializer):
     class Meta:
