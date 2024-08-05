@@ -43,29 +43,29 @@ class AuthenticatedRouteApiTests(TestCase):
             name="Valencia", iata_code="VLC", closest_big_city="Valencia"
         )
 
-        self.route1 = Route.objects.create(source=self.airport1, destination=self.airport2, distance=1900)
-        self.route2 = Route.objects.create(source=self.airport2, destination=self.airport1, distance=1900)
-
         self.client.force_authenticate(self.user)
 
     def test_filter_route_by_source(self):
         """Test filtering routes by source"""
+        route1 = sample_route(source=self.airport1, destination=self.airport2)
+        route2 = sample_route(source=self.airport2, destination=self.airport1)
 
         res = self.client.get(ROUTE_URL, {"source": self.airport1.name})
 
-        serializer1 = RouteListSerializer(self.route1)
-        serializer2 = RouteListSerializer(self.route2)
+        serializer1 = RouteListSerializer(route1)
+        serializer2 = RouteListSerializer(route2)
 
         self.assertIn(serializer1.data, res.data)
         self.assertNotIn(serializer2.data, res.data)
 
     def test_filter_route_by_destination(self):
         """Test filtering routes by destination"""
-
+        route1 = sample_route(source=self.airport1, destination=self.airport2)
+        route2 = sample_route(source=self.airport2, destination=self.airport1)
         res = self.client.get(ROUTE_URL, {"destination": self.airport2.name})
 
-        serializer1 = RouteListSerializer(self.route1)
-        serializer2 = RouteListSerializer(self.route2)
+        serializer1 = RouteListSerializer(route1)
+        serializer2 = RouteListSerializer(route2)
 
         self.assertIn(serializer1.data, res.data)
         self.assertNotIn(serializer2.data, res.data)
