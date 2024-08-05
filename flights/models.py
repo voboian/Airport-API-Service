@@ -11,9 +11,10 @@ from django.utils.text import slugify
 class Airport(models.Model):
     name = models.CharField(max_length=255, unique=True)
     closest_big_city = models.CharField(max_length=255)
+    iata_code = models.CharField(max_length=3, unique=True, null=True, blank=True)
 
     def __str__(self):
-        return self.name
+        return f"{self.name} ({self.iata_code})"
 
 
 class AirplaneType(models.Model):
@@ -58,7 +59,9 @@ class Route(models.Model):
     distance = models.IntegerField()
 
     def __str__(self):
-        return f"{self.source.name} to {self.destination.name}"
+        source_airport = f"{self.source.iata_code} ({self.source.closest_big_city})"
+        destination_airport = f"{self.destination.iata_code} ({self.destination.closest_big_city})"
+        return f"{source_airport} Airport to {destination_airport} Airport"
 
     def clean(self):
         if self.source == self.destination:
@@ -95,10 +98,6 @@ class Flight(models.Model):
 
     def __str__(self):
         return f"Flight {self.route} on {self.departure_time}"
-
-    # @property
-    # def tickets_available(self):
-    #     return self.airplane.rows * self.airplane.seats_in_row - self.tickets.count()
 
 
 class Order(models.Model):

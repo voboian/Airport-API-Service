@@ -16,7 +16,7 @@ from flights.models import (
 class AirportSerializer(serializers.ModelSerializer):
     class Meta:
         model = Airport
-        fields = ("id", "name", "closest_big_city", )
+        fields = ("id", "name", "closest_big_city", "iata_code")
 
 
 class AirplaneTypeSerializer(serializers.ModelSerializer):
